@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  image     String?
+  icon      String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id            String           @id @default(uuid())
+  title         String
+  slug          String           @unique
+  description   String?
+  price         Float
+  stock         Int              @default(0)
+  images        String[]
+  isFeatured    Boolean          @default(false)
+  categoryId    String
+  category      Category         @relation(fields: [categoryId], references: [id])
+  dealItems     WeeklyDealItem[]
+  orderItems    OrderItem[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model ThemeSetting {
+  id             String   @id @default(uuid())
+  name           String
+  nameAr         String
+  isActive       Boolean  @default(false)
+  layoutType     String   @default("spiritual")
+  primaryColor   String   @default("#15803d")
+  secondaryColor String   @default("#eab308")
+  bgColor        String   @default("#fffbeb")
+  textColor      String   @default("#1c1917")
+  accentColor    String   @default("#d97706")
+  fontFamily     String   @default("Cairo")
+  borderRadius   String   @default("0.75rem")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model WeeklyDeal {
+  id            String           @id @default(uuid())
+  title         String
+  description   String?
+  dealPrice     Float
+  originalPrice Float
+  isActive      Boolean          @default(false)
+  expiresAt     DateTime?
+  items         WeeklyDealItem[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model WeeklyDealItem {
+  id        String     @id @default(uuid())
+  dealId    String
+  deal      WeeklyDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product    @relation(fields: [productId], references: [id])
+  quantity  Int        @default(1)
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  customer    String
+  phone       String
+  address     String
+  notes       String?
+  total       Float
+  status      String      @default("PENDING")
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  title     String
+  price     Float
+  quantity  Int
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
