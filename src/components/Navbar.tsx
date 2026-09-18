@@ -2,9 +2,12 @@
 import Link from "next/link";
 import { ShoppingCart, Menu, X, Phone } from "lucide-react";
 import { useCart } from "@/components/CartProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
+  const router = useRouter();
+  const clickTimesRef = useRef<number[]>([]);
   const { count } = useCart();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -16,6 +19,20 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    const now = Date.now();
+    // Keep clicks registered in the last 1200ms
+    clickTimesRef.current = clickTimesRef.current.filter((t) => now - t < 1200);
+    clickTimesRef.current.push(now);
+
+    if (clickTimesRef.current.length >= 3) {
+      e.preventDefault();
+      e.stopPropagation();
+      clickTimesRef.current = [];
+      router.push("/login");
+    }
+  };
 
   const links = [
     { href: "/", label: "الرئيسية" },
@@ -46,7 +63,11 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link 
+          href="/" 
+          onClick={handleLogoClick}
+          className="flex items-center gap-3 group select-none touch-manipulation cursor-pointer"
+        >
           <div className="w-10 h-10 rounded-full border-2 border-[var(--theme-secondary)] flex items-center justify-center text-xl bg-black/30 group-hover:scale-110 transition-transform">
             🕌
           </div>
