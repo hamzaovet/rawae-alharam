@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/session";
@@ -55,3 +55,25 @@ export async function deleteUser(id: string): Promise<void> {
     console.error("Error deleting user:", error);
   }
 }
+
+export async function updateAdminPassword(formData: FormData): Promise<void> {
+  const session = await verifySession();
+  if (session?.role !== "SUPER_ADMIN") redirect("/dashboard");
+
+  const id = formData.get("id") as string;
+  const newPassword = (formData.get("newPassword") as string)?.trim();
+
+  if (!id || !newPassword || newPassword.length < 8) return;
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    revalidatePath("/dashboard/users");
+  } catch (error) {
+    console.error("Error updating admin password:", error);
+  }
+}
+

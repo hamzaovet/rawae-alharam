@@ -1,10 +1,10 @@
-﻿import prisma from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createAdmin, toggleUserStatus, deleteUser } from "@/app/actions/user";
+import { createAdmin, toggleUserStatus, deleteUser, updateAdminPassword } from "@/app/actions/user";
 
 export default async function UsersPage() {
   const session = await verifySession();
@@ -70,7 +70,7 @@ export default async function UsersPage() {
                 </TableCell>
                 <TableCell>
                   {user.role !== "SUPER_ADMIN" && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       <form action={toggleUserStatus.bind(null, user.id)}>
                         <Button type="submit" variant="outline" size="sm"
                           className={user.isActive ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-green-600 border-green-200 hover:bg-green-50"}>
@@ -82,6 +82,21 @@ export default async function UsersPage() {
                           حذف
                         </Button>
                       </form>
+                      <details className="relative">
+                        <summary className="cursor-pointer px-2.5 py-1 text-xs border rounded-md text-blue-600 border-blue-200 hover:bg-blue-50 list-none select-none">
+                          🔑 تغيير كلمة المرور
+                        </summary>
+                        <div className="absolute left-0 top-full mt-2 bg-white border p-3 rounded-xl shadow-xl z-30 w-64 text-right">
+                          <form action={updateAdminPassword} className="space-y-2">
+                            <input type="hidden" name="id" value={user.id} />
+                            <p className="text-xs font-bold text-gray-700">كلمة المرور الجديدة لـ {user.username}:</p>
+                            <Input name="newPassword" type="password" placeholder="8 أحرف على الأقل" required minLength={8} className="h-8 text-xs text-left" dir="ltr" />
+                            <Button type="submit" size="sm" className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
+                              تحديث
+                            </Button>
+                          </form>
+                        </div>
+                      </details>
                     </div>
                   )}
                   {user.role === "SUPER_ADMIN" && (

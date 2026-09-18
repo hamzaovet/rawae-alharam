@@ -6,15 +6,22 @@ import { createSession, deleteSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 export async function login(prevState: any, formData: FormData) {
-  const username = formData.get("username") as string;
+  const rawUsername = formData.get("username") as string;
   const password = formData.get("password") as string;
+
+  const username = rawUsername?.trim();
 
   if (!username || !password) {
     return { error: "يرجى إدخال اسم المستخدم وكلمة المرور" };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username },
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: username,
+        mode: "insensitive",
+      },
+    },
   });
 
   if (!user || !user.isActive) {
